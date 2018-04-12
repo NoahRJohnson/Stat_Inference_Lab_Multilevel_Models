@@ -1,0 +1,73 @@
+---
+title: "Multilevel Models"
+author: "Mine Dogucu"
+date: "April 12, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(install.load)
+install_load('tidyverse')
+install_load('lme4')
+```
+
+We will continue to use the hsb.csv file. In the last class, we had group mean centered the ses variable.
+
+```{r}
+hsb <- read.csv("hsb.csv")
+hsb.sum <- hsb %>% 
+  group_by(schoolid) %>% 
+  summarize(group.mean.ses=mean(ses))
+hsb <- merge(hsb, hsb.sum, by="schoolid")
+hsb$group.mean.cen.ses <- hsb$ses - hsb$group.mean.ses
+```
+
+## Random Coefficients Model
+
+```{r}
+model2 <- lmer(mathach ~ group.mean.cen.ses + (group.mean.cen.ses | schoolid), data=hsb)
+summary(model2)
+```
+
+### Model Notation
+
+### Parameters
+
+## Contextual Model
+
+Sector = 0 for public schools,
+1 for catholic schools
+
+```{r}
+model3 <- lmer(mathach ~ group.mean.cen.ses * sector + (group.mean.cen.ses | schoolid), data=hsb)
+model3.sum <- summary(model3)
+model3.sum
+```
+
+### Model Notation
+Level 1: $Y_{ij} = \beta_{0j} + \beta_{1j}(ses_{ij} - \bar{ses_{.j}}) + r_{ij}$
+
+Level 2: $\beta_{0j} = \gamma_{00} + \gamma_{01}*sector_j + u_{0j}$
+
+$\beta_{0j} = \gamma_{00} + \gamma_{01}*sector_j + u_{0j}$
+
+Mixed: $Y_{ij} = \gamma_{00} + \gamma_{01}*sector_j + u_{0j} + \gamma_{10}(ses_{ij} - \bar{ses_{.j}}) + \gamma_{11} * sector_j (ses_{ij} - \bar{ses_{.j}}) + u_{1j} (ses_{ij} - \bar{ses_{.j}}) + r_{ij}$
+
+### Parameters
+
+$\gamma_{00} = `r model3.sum$coefficients[[1,1]]`$. Expected math achievement score for public schools.
+
+$\gamma_{01} = `r model3.sum$coefficients[[2,1]]`$. Expected increase in expected math achievement for catholic schools.
+
+$\gamma_{10} = `r model3.sum$coefficients[[3,1]]`$. The effect of ses on math achievement for public schools.
+
+$\gamma_{11} = `r model3.sum$coefficients[[4,1]]`$. The increase of the effect of SES on math achievement for catholic schools.
+
+$\sigma^2 = `r model3.sum$sigma^2`$ Within-group variance
+
+$\tau_{00} = `r `$
+
+$\tau_{11} = `r `$
+of between school variability in the effect of ses can be explained by sector
