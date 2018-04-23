@@ -10,6 +10,7 @@
 
 
 <meta name="author" content="Mine Dogucu" />
+<meta name="author" content="Noah Johnson" />
 
 <meta name="date" content="2018-04-12" />
 
@@ -121,6 +122,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Multilevel Models</h1>
 <h4 class="author"><em>Mine Dogucu</em></h4>
+<h4 class="author"><em>Noah Johnson</em></h4>
 <h4 class="date"><em>April 12, 2018</em></h4>
 
 </div>
@@ -128,15 +130,19 @@ $(document).ready(function () {
 
 <p>We will continue to use the hsb.csv file. In the last class, we had group mean centered the ses variable.</p>
 <pre class="r"><code>hsb &lt;- read.csv(&quot;hsb.csv&quot;)
-hsb.sum &lt;- hsb %&gt;% 
+
+group_means &lt;- hsb %&gt;% 
   group_by(schoolid) %&gt;% 
   summarize(group.mean.ses=mean(ses))
-hsb &lt;- merge(hsb, hsb.sum, by=&quot;schoolid&quot;)
+
+hsb &lt;- merge(hsb, group_means, by=&quot;schoolid&quot;)
+
 hsb$group.mean.cen.ses &lt;- hsb$ses - hsb$group.mean.ses</code></pre>
 <div id="random-coefficients-model" class="section level2">
 <h2>Random Coefficients Model</h2>
 <pre class="r"><code>model2 &lt;- lmer(mathach ~ group.mean.cen.ses + (group.mean.cen.ses | schoolid), data=hsb)
-summary(model2)</code></pre>
+model2.sum &lt;- summary(model2)
+model2.sum</code></pre>
 <pre><code>## Linear mixed model fit by REML ['lmerMod']
 ## Formula: mathach ~ group.mean.cen.ses + (group.mean.cen.ses | schoolid)
 ##    Data: hsb
@@ -164,9 +170,17 @@ summary(model2)</code></pre>
 ## grp.mn.cn.s 0.009</code></pre>
 <div id="model-notation" class="section level3">
 <h3>Model Notation</h3>
+<p><span class="math inline">\(mathach_{ij} = \beta_{0j} + \beta_{1j}*(ses_{ij} - \bar{ses}_{.j}) + r_{ij}\)</span></p>
+<p><span class="math inline">\(\beta_{0j} = \gamma_{00} + u_{0j}\)</span></p>
+<p><span class="math inline">\(\beta_{1j} = \gamma_{10} + u_{1j}\)</span></p>
 </div>
 <div id="parameters" class="section level3">
 <h3>Parameters</h3>
+<p><span class="math inline">\(\gamma_{00} = 12.6361931\)</span> is the estimated grand mean math score.</p>
+<p><span class="math inline">\(\gamma_{10} = 2.1931963\)</span> is the average effect of hedres on math score.</p>
+<p><span class="math inline">\(var(r_{ij}) = 36.7\)</span> is the within-group variance.</p>
+<p><span class="math inline">\(var(u_{0j}) = 8.681\)</span> is the between-group variance of the intercept <span class="math inline">\(\beta_{0j}\)</span>.</p>
+<p><span class="math inline">\(var(u_{1j}) = 0.694\)</span> is the between-group variance of the slope <span class="math inline">\(\beta_{1j}\)</span>.</p>
 </div>
 </div>
 <div id="contextual-model" class="section level2">
@@ -207,9 +221,18 @@ model3.sum</code></pre>
 ## grp.mn.cn.: -0.172 -0.663  0.261</code></pre>
 <div id="model-notation-1" class="section level3">
 <h3>Model Notation</h3>
-<p>Level 1:</p>
+<p>Level 1: <span class="math inline">\(mathach_{ij} = \beta_{0j} + \beta_{1j}*(ses_{ij} - \bar{ses_{.j}}) + r_{ij}\)</span></p>
 <p>Level 2:</p>
+<p><span class="math inline">\(\beta_{0j} = \gamma_{00} + \gamma_{01}*sector_j + u_{0j}\)</span></p>
+<p><span class="math inline">\(\beta_{1j} = \gamma_{10} + \gamma_{11}*sector_j + u_{1j}\)</span></p>
 <p>Mixed:</p>
+<p><span class="math display">\[
+\begin{aligned}
+mathach_{ij} = \gamma_{00} + \gamma_{01}*sector_j + u_{0j} + \gamma_{10}(ses_{ij} - \bar{ses_{.j}}) + 
+\\
+\gamma_{11} * sector_j * (ses_{ij} - \bar{ses_{.j}}) + u_{1j} (ses_{ij} - \bar{ses_{.j}}) + r_{ij}
+\end{aligned}
+\]</span></p>
 </div>
 <div id="parameters-1" class="section level3">
 <h3>Parameters</h3>
@@ -217,6 +240,9 @@ model3.sum</code></pre>
 <p><span class="math inline">\(\gamma_{01} = 2.8028102\)</span>. Expected increase in expected math achievement for catholic schools.</p>
 <p><span class="math inline">\(\gamma_{10} = 2.8075301\)</span>. The effect of ses on math achievement for public schools.</p>
 <p><span class="math inline">\(\gamma_{11} = -1.3410675\)</span>. The increase of the effect of SES on math achievement for catholic schools.</p>
+<p><span class="math inline">\(s^2 = 36.705604\)</span>. The residual within-group variance</p>
+<p><span class="math inline">\(\tau_{00} = 6.7378\)</span>. The between-group variance in the expected math achievement.</p>
+<p><span class="math inline">\(\tau_{11} = 0.2657\)</span>. The between-group variance in the effect of ses.</p>
 </div>
 </div>
 
